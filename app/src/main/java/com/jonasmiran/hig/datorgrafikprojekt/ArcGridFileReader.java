@@ -11,10 +11,11 @@ import java.util.Map;
 
 /**
  * Created by Miran on 31/10/2016.
+ * Kod för att hämta data och metadata
  */
 public class ArcGridFileReader {
 
-    private Map<String, Float> metaData = new HashMap();
+    private Map<String, Float> metaData;
     private final String NCOLS = "ncols";
     private final String NROWS = "nrows";
     private final String XLLCENTER = "xllcenter";
@@ -26,6 +27,7 @@ public class ArcGridFileReader {
 
     public ArcGridFileReader(Context ctx, int resId)
     {
+        metaData = new HashMap();
         rasterValues = readFile(ctx, resId);
     }
 
@@ -117,6 +119,11 @@ public class ArcGridFileReader {
     public int getNColls()
     {
         return metaData.get(NCOLS).intValue();
+    }
+
+    public float getNoDataValue()
+    {
+        return metaData.get(NODATA_VALUE);
     }
 
 }

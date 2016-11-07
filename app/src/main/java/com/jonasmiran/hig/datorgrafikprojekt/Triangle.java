@@ -1,11 +1,11 @@
 package com.jonasmiran.hig.datorgrafikprojekt;
 
 import android.opengl.GLES20;
-import android.opengl.GLES30;
 
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
 import java.nio.FloatBuffer;
+import java.nio.IntBuffer;
 
 public class Triangle {
 
@@ -15,10 +15,11 @@ public class Triangle {
     static final int VERTEX_ATTRIB_SIZE = VERTEX_POS_SIZE;
     static final int COLOR_ATTRIB_SIZE = COLOR_SIZE;
 
-    private final int VERTEX_COUNT = triangleData.length / VERTEX_ATTRIB_SIZE;
+    private int VERTEX_COUNT = triangleData.length / VERTEX_ATTRIB_SIZE;
 
     private FloatBuffer vertexDataBuffer;
     private FloatBuffer colorDataBuffer;
+    private IntBuffer indexBuffer;
 
     static float triangleData[] = {   // in counterclockwise order:
             0.0f,  0.622008459f, 0.0f, 1.0f, // top
@@ -32,8 +33,6 @@ public class Triangle {
             0.0f, 0.0f, 1.0f, 1.0f// Blue
     };
 
-    float color[] = { 0.63671875f, 0.76953125f, 0.22265625f, 1.0f };
-
     private final int mProgram;
 
     private final String vertexShaderCode = ShaderFileReader.readRawTextFile(MyGLSurfaceView.context, R.raw.vertex_shader);
@@ -45,15 +44,15 @@ public class Triangle {
     private int positionHandle;
     private int colorHandle;
 
-    float[][] rasterData;
+    private ArcGridFileReader arcGridFileReader = new ArcGridFileReader(MyGLSurfaceView.context, R.raw.dem);
+    private float[][] heightData = arcGridFileReader.getRasterData();;
+
+    private float color[];
 
     public Triangle() {
-
-        /**
-         * Just a test to get values from DEM.
-         */
-        ArcGridFileReader arcGridFileReader = new ArcGridFileReader(MyGLSurfaceView.context, R.raw.dem);
-        rasterData = arcGridFileReader.getRasterData();
+        color = new float[heightData.length];
+        triangleData = getVertices(heightData);
+        VERTEX_COUNT = triangleData.length / VERTEX_ATTRIB_SIZE;
 
         ByteBuffer bbv = ByteBuffer.allocateDirect(
                 triangleData.length * 4);
@@ -106,9 +105,69 @@ public class Triangle {
 
         GLES20.glUniformMatrix4fv(mMVPMatrixHandle, 1, false, mvpMatrix, 0);
 
-        GLES20.glDrawArrays(GLES20.GL_TRIANGLES, 0, VERTEX_COUNT);
+        GLES20.glDrawArrays(GLES20.GL_TRIANGLE_STRIP, 0, VERTEX_COUNT);
 
         GLES20.glDisableVertexAttribArray(positionHandle);
         GLES20.glDisableVertexAttribArray(colorHandle);
     }
+
+    private int rowSize = arcGridFileReader.getNRows();
+    private int colSize = arcGridFileReader.getNColls();
+    private float cellSize = arcGridFileReader.getCellSize();
+
+    public float[] getVertices (float[][] heightData)
+    {
+        float[] oneDHeightArray = new float[heightData.length * 4];
+
+        //Vi har endast y-värden så därför behöver vi sätta in x och z och w
+        float x = cellSize / 2;
+        float z = cellSize / 2;
+        float w = 1.0f;
+
+        int index = 0;
+        int yIndex = 1;
+        int zIndex = 2;
+        int wIndex = 3;
+        int j = 0;
+
+        for(int i = 0; i < rowSize; i++)
+        {
+            if(isEven(i)) {
+                for (j = j; j < colSize; j++)
+                {
+                    if (wIndex == heightData.length)
+                        break;
+
+                    if(isOdd(j))
+                    {
+                        z += cellSize;
+                    } else
+                    {
+                        x += cellSize;
+                        z -= cellSize;
+                        index += 4;
+                        yIndex += 3;
+                        zIndex += 2;
+                        wIndex++;
+                    }
+
+                    oneDHeightArray[index] = x;
+                    oneDHeightArray[yIndex] = (heightData[i][j]);
+                    oneDHeightArray[zIndex] = z;
+                    oneDHeightArray[wIndex] = w;
+
+                    index += 4;
+                    yIndex += 4;
+                    zIndex += 4;
+                    wIndex += 4;
+                }
+            }
+        }
+
+        return oneDHeightArray;
+    }
+
+    public boolean isEven(int num) { return num % 2 == 0; }
+
+    public boolean isOdd(int num) { return num % 2 == 1; }
 }
