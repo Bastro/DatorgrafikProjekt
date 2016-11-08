@@ -25,6 +25,7 @@ public class ArcGridFileReader {
     private final String YLLCENTER = "yllcenter";
     private final String CELLSIZE = "cellsize";
     private final String NODATA_VALUE = "nodata_value";
+    private final int META_DATA_LENGTH = 5;
 
     private float[][] rasterValues;
 
@@ -76,7 +77,7 @@ public class ArcGridFileReader {
 
             while (line != null)
             {
-                if (lineNumber > 5) //Metadata length
+                if (lineNumber > META_DATA_LENGTH)
                 {
                     sb.append(line);
                 } else
