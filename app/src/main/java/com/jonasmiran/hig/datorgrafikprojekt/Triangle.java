@@ -1,11 +1,13 @@
 package com.jonasmiran.hig.datorgrafikprojekt;
 
 import android.opengl.GLES20;
+import android.util.Log;
 
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
 import java.nio.FloatBuffer;
 import java.nio.ShortBuffer;
+import java.util.Arrays;
 
 public class Triangle {
 
@@ -33,6 +35,8 @@ public class Triangle {
             0.0f, 0.0f, 1.0f, 1.0f// Blue
     };
 
+    private short indices[];
+
     private final int mProgram;
 
     private final String vertexShaderCode = ShaderFileReader.readRawTextFile(MyGLSurfaceView.context, R.raw.vertex_shader);
@@ -48,9 +52,11 @@ public class Triangle {
     private float[][] heightData = arcGridFileReader.getRasterData();
 
     public Triangle() {
-        colorData = new float[((((rowSize*colSize-colSize*2)*2)-rowSize+2)+colSize*2)*4];
+        colorData = new float[rowSize * colSize * 4];
         triangleData = getVertices(heightData);
         VERTEX_COUNT = triangleData.length / VERTEX_ATTRIB_SIZE;
+
+        indices = createIndices(rowSize, colSize, indices);
 
         ByteBuffer bbv = ByteBuffer.allocateDirect(
                 triangleData.length * 4);
@@ -67,6 +73,12 @@ public class Triangle {
         colorDataBuffer = bbc.asFloatBuffer();
         colorDataBuffer.put(colorData);
         colorDataBuffer.position(0);
+
+        indexBuffer = ByteBuffer.allocateDirect(triangleData.length * 4) // Two rows, each element 4 bytes
+                .order(ByteOrder.nativeOrder())
+                .asShortBuffer()
+                .put(indices);
+        indexBuffer.position(0);
 
         int vertexShader = CGRenderer.loadShader(GLES20.GL_VERTEX_SHADER,
                 vertexShaderCode);
@@ -103,7 +115,8 @@ public class Triangle {
 
         GLES20.glUniformMatrix4fv(mMVPMatrixHandle, 1, false, mvpMatrix, 0);
 
-        GLES20.glDrawArrays(GLES20.GL_POINTS, 0, VERTEX_COUNT); //GL_Triangles och andra typer ger liknande resultat
+        //GLES20.glDrawArrays(GLES20.GL_TRIANGLES, 0, VERTEX_COUNT); //GL_Triangles och andra typer ger liknande resultat
+        GLES20.glDrawElements(GLES20.GL_LINES, indices.length, GLES20.GL_UNSIGNED_SHORT, indexBuffer);
 
         GLES20.glDisableVertexAttribArray(positionHandle);
         GLES20.glDisableVertexAttribArray(colorHandle);
@@ -118,8 +131,8 @@ public class Triangle {
         float[] vertices = new float[rowSize * colSize * VERTEX_POS_SIZE];
 
         //Vi har endast y-värden så därför behöver vi sätta in x och z och w
-        float x = cellSize / 2;
-        float z = cellSize / 2;
+        float x = cellSize;
+        float z = cellSize;
         float w = 1.0f;
 
         int index = 0;
@@ -145,8 +158,8 @@ public class Triangle {
                     x += cellSize;
 
                     setColor(heightData[i][j]);
-
                 }
+
             x = cellSize;
             z += cellSize;
         }
@@ -284,6 +297,9 @@ public class Triangle {
     /**
      * Temporär. Tänkte prova rita allt med en index buffer istället.
      * http://stackoverflow.com/questions/5915753/generate-a-plane-with-triangle-strips
+     *
+     * based on http://www.chadvernon.com/blog/resources/directx9/terrain-generation-with-a-heightmap/
+     *
      * @param rows
      * @param columns
      * @param indices
@@ -291,18 +307,73 @@ public class Triangle {
      */
     public short[] createIndices(int rows, int columns, short[] indices)
     {
-        indices = new short[rows * 2];
+        indices = new short[(columns * 2) * (rows - 1) + (rows - 2)];
 
-        // Set up indices
-        short i = 0;
-        for (short r = 0; r < rows - 1; ++r) {
-            indices[i++] =(short) (r * columns);
-            for (short c = 0; c < columns; ++c) {
-                indices[i++] =(short) (r * columns + c);
-                indices[i++] =(short) ((r + 1) * columns + c);
+        /* En metod
+        int indicesIndex = 0;
+        for(int y = 0; y < rows; ++y)
+        {
+            for(int x = 0; x < columns; ++x)
+            {
+                int start = y * columns + x;
+                indices[indicesIndex++] = (short)start;
+                indices[indicesIndex++] = (short)(start + 1);
+                indices[indicesIndex++] = (short)(start + columns);
+                indices[indicesIndex++] = (short)(start + 1);
+                indices[indicesIndex++] = (short)(start + 1 + columns);
+                indices[indicesIndex++] = (short)(start + columns);
             }
-            indices[i++] = (short)((r + 1) * columns + (columns - 1));
+        }*/
+
+        /* En annan metod
+        int index = 0;
+        for (int j = 0; j < rows; j++){
+        for (int i = 0; i < colSize; i++) {
+            if(index == j * i)
+                break;
+            indices[index * 2] = (short)index;
+            indices[index * 2 + 1] = (short) (index + colSize);
+            index++;
         }
+        }*/
+
+        //Det som används just nu
+        int index = 0;
+        for ( int z = 0; z < rows - 1; z++ )
+        {
+            // Even rows move left to right, odd rows move right to left.
+            if ( z % 2 == 0 )
+            {
+                // Even row
+                int x;
+                for ( x = 0; x < columns; x++ )
+                {
+                    indices[index++] = (short)(x + (z * columns));
+                    indices[index++] = (short)(x + (z * columns) + columns);
+                }
+                // Insert degenerate vertex if this isn't the last row
+                if ( z != rows - 2)
+                {
+                    indices[index++] = (short)(--x + (z * columns));
+                }
+            }
+            else
+            {
+                // Odd row
+                int x;
+                for ( x = columns - 1; x >= 0; x-- )
+                {
+                    indices[index++] = (short)(x + (z * columns));
+                    indices[index++] = (short) (x + (z * columns) + columns);
+                }
+                // Insert degenerate vertex if this isn't the last row
+                if ( z != rows - 2)
+                {
+                    indices[index++] = (short)(++x + (z * columns));
+                }
+            }
+        }
+
         return indices;
     }
 
