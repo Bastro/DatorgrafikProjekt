@@ -108,7 +108,7 @@ class CGRenderer implements GLSurfaceView.Renderer {
         GLES20.glClear(GLES20.GL_COLOR_BUFFER_BIT|GLES20.GL_DEPTH_BUFFER_BIT);
 
         Matrix.setIdentityM(mViewMatrix, 0);
-        Matrix.translateM(mViewMatrix, 0, 0, 0, -1.75f);
+        Matrix.translateM(mViewMatrix, 0, 0, 0, -10000f);
 
         // Calculate the projection and view transformation
         Matrix.multiplyMM (mMVPMatrix, 0, mProjectionMatrix, 0, mViewMatrix, 0);
@@ -117,6 +117,8 @@ class CGRenderer implements GLSurfaceView.Renderer {
         Matrix.multiplyMM (CTM, 0, mMVPMatrix, 0, mRotationMatrix, 0);
         Matrix.setRotateM (mRotationMatrix, 0, xAngle, 0, 1.0f, 0);
         Matrix.multiplyMM (CTM, 0, CTM, 0, mRotationMatrix, 0);
+
+        Matrix.setLookAtM(mMVPMatrix, 0, 4000f, 1000f, -5300f,7900,70,5300,0,1,0);
 
         // Draw shape
         mTriangle.draw (CTM);
@@ -130,7 +132,7 @@ class CGRenderer implements GLSurfaceView.Renderer {
 
         // this projection matrix is applied to object coordinates
         // in the onDrawFrame() method
-        Matrix.frustumM(mProjectionMatrix, 0, -ratio, ratio, -1, 1, 0.5f, 1000.0f);
+        Matrix.frustumM(mProjectionMatrix, 0, -ratio, ratio, -1, 1, 0.5f, 300000.0f);
 
     }
 
@@ -162,4 +164,5 @@ class CGRenderer implements GLSurfaceView.Renderer {
     public void setYAngle(float angle) {
         yAngle = angle;
     }
+
 }

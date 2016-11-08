@@ -5,7 +5,7 @@ import android.opengl.GLES20;
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
 import java.nio.FloatBuffer;
-import java.nio.IntBuffer;
+import java.nio.ShortBuffer;
 
 public class Triangle {
 
@@ -15,19 +15,19 @@ public class Triangle {
     static final int VERTEX_ATTRIB_SIZE = VERTEX_POS_SIZE;
     static final int COLOR_ATTRIB_SIZE = COLOR_SIZE;
 
-    private int VERTEX_COUNT = triangleData.length / VERTEX_ATTRIB_SIZE;
+    private int VERTEX_COUNT;
 
     private FloatBuffer vertexDataBuffer;
     private FloatBuffer colorDataBuffer;
-    private IntBuffer indexBuffer;
+    private ShortBuffer indexBuffer;
 
-    static float triangleData[] = {   // in counterclockwise order:
+    private float triangleData[] = {   // in counterclockwise order:
             0.0f,  0.622008459f, 0.0f, 1.0f, // top
             -0.5f, -0.311004243f, 0.0f, 1.0f, // bottom left
             0.5f, -0.311004243f, 0.0f, 1.0f, // bottom right
     };
 
-    static float colorData[] = {   // in counterclockwise order:
+    private float colorData[] = {   // in counterclockwise order:
             1.0f, 0.0f, 0.0f, 1.0f, // Red
             0.0f, 1.0f, 0.0f, 1.0f, // Green
             0.0f, 0.0f, 1.0f, 1.0f// Blue
@@ -45,12 +45,10 @@ public class Triangle {
     private int colorHandle;
 
     private ArcGridFileReader arcGridFileReader = new ArcGridFileReader(MyGLSurfaceView.context, R.raw.dem);
-    private float[][] heightData = arcGridFileReader.getRasterData();;
-
-    private float color[];
+    private float[][] heightData = arcGridFileReader.getRasterData();
 
     public Triangle() {
-        color = new float[heightData.length];
+        colorData = new float[((((rowSize*colSize-colSize*2)*2)-rowSize+2)+colSize*2)*4];
         triangleData = getVertices(heightData);
         VERTEX_COUNT = triangleData.length / VERTEX_ATTRIB_SIZE;
 
@@ -105,7 +103,7 @@ public class Triangle {
 
         GLES20.glUniformMatrix4fv(mMVPMatrixHandle, 1, false, mvpMatrix, 0);
 
-        GLES20.glDrawArrays(GLES20.GL_TRIANGLE_STRIP, 0, VERTEX_COUNT);
+        GLES20.glDrawArrays(GLES20.GL_POINTS, 0, VERTEX_COUNT); //GL_Triangles och andra typer ger liknande resultat
 
         GLES20.glDisableVertexAttribArray(positionHandle);
         GLES20.glDisableVertexAttribArray(colorHandle);
@@ -117,7 +115,7 @@ public class Triangle {
 
     public float[] getVertices (float[][] heightData)
     {
-        float[] oneDHeightArray = new float[heightData.length * 4];
+        float[] vertices = new float[rowSize * colSize * VERTEX_POS_SIZE];
 
         //Vi har endast y-värden så därför behöver vi sätta in x och z och w
         float x = cellSize / 2;
@@ -128,46 +126,184 @@ public class Triangle {
         int yIndex = 1;
         int zIndex = 2;
         int wIndex = 3;
-        int j = 0;
 
         for(int i = 0; i < rowSize; i++)
         {
-            if(isEven(i)) {
-                for (j = j; j < colSize; j++)
+                for (int j = 0; j < colSize; j++)
                 {
-                    if (wIndex == heightData.length)
-                        break;
 
-                    if(isOdd(j))
-                    {
-                        z += cellSize;
-                    } else
-                    {
-                        x += cellSize;
-                        z -= cellSize;
-                        index += 4;
-                        yIndex += 3;
-                        zIndex += 2;
-                        wIndex++;
-                    }
-
-                    oneDHeightArray[index] = x;
-                    oneDHeightArray[yIndex] = (heightData[i][j]);
-                    oneDHeightArray[zIndex] = z;
-                    oneDHeightArray[wIndex] = w;
+                    vertices[index] = x;
+                    vertices[yIndex] = (heightData[i][j]) * cellSize;
+                    vertices[zIndex] = z;
+                    vertices[wIndex] = w;
 
                     index += 4;
                     yIndex += 4;
                     zIndex += 4;
                     wIndex += 4;
+
+                    x += cellSize;
+
+                    setColor(heightData[i][j]);
+
                 }
-            }
+            x = cellSize;
+            z += cellSize;
         }
 
-        return oneDHeightArray;
+        return vertices;
+    }
+
+    /**
+     * Lånat från Dennis och Daniel. Användes för debugging. Ger bättre resultat än getVertices just nu.
+     * @param heightData
+     * @return
+     */
+    public float[] looop(float[][] heightData){
+
+        float matrix[][];
+        int hightMulti = 20;
+            matrix = heightData;
+        float cellSize = arcGridFileReader.getCellSize();
+        float[] array = new float[((((rowSize*colSize-colSize*2)*2)-rowSize+2)+colSize*2)*4];
+        int sizeOfArray = ((((rowSize*colSize-colSize*2)*2)-rowSize+2)+colSize*2)*4;
+        int index = 4,j=1,arrayindex=0, rowEven=0,rowOdd=-1,row=0;
+        float x= cellSize/2,z=cellSize/2;
+        array[0]=x;
+        array[1]=matrix[0][0] * 50;
+        array[2]=z;
+        array[3]=1f;
+        setColor(array[1]);
+
+        for (int i = 0; i < rowSize-1; i++) {
+            if((i%2)==0 ){
+                rowOdd = rowOdd+2;
+
+                for (j=j; j < (colSize*2); j++) {
+
+                    if((j%2) !=0 ){
+                        z=z+cellSize;
+                        row=rowOdd;
+                    }
+                    else{
+                        x=x+cellSize;
+                        z=z-cellSize;
+                        row=rowEven;
+                        arrayindex++;
+                    }
+
+                    setColor(array[j]);
+
+                    array[index]=x;
+                    array[index+1]=(matrix[row][arrayindex]) * 50;
+                    array[index+2]=z;
+                    array[index+3]=1f;
+                    index = index+4;
+
+                }
+
+            }
+            else{
+                rowEven=rowEven+2;
+                for (j=j; j > 1; j--) {
+
+                    if((j%2) !=0 ){
+                        x=x-cellSize;
+                        z=z-cellSize;
+                        row=rowOdd;
+                        arrayindex--;
+                    }
+                    else{
+                        z=z+cellSize;
+                        row=rowEven;
+                    }
+
+
+                    setColor(array[j]);
+                    array[index]=x;
+                    array[index+1]=matrix[row][arrayindex] * 50;
+                    array[index+2]=z;
+                    array[index+3]=1f;
+                    index = index+4;
+
+                }
+
+
+
+
+            }
+
+
+        }
+
+
+        return array;
+    }
+
+
+    private int colorIndex = 0;
+
+    /**
+     * Lånat från Dennis och Daniel. Bara för att testa. Behövs för att ritfunktionen inte kraschar.
+     * @param hight
+     */
+    private void setColor(float hight){
+
+        if(hight>60){
+            colorData[colorIndex]=0.5f;
+            colorData[colorIndex+1]=0.3f;
+            colorData[colorIndex+2]=0.0f;
+            colorData[colorIndex+3]=1f;
+        }
+        else if(hight<45&&hight>20){
+            colorData[colorIndex]=0.3f;
+            colorData[colorIndex+1]=0.7f;
+            colorData[colorIndex+2]=0.1f;
+            colorData[colorIndex+3]=1f;
+        }
+        else if(hight>44&&hight<61) {
+            colorData[colorIndex]=1.0f;
+            colorData[colorIndex+1]=1.0f;
+            colorData[colorIndex+2]=1.0f;
+            colorData[colorIndex+3]=1f;
+
+        }
+        else{
+           colorData[colorIndex]=0f;
+           colorData[colorIndex+1]=0.1f;
+           colorData[colorIndex+2]=0.8f;
+           colorData[colorIndex+3]=1f;
+        }
+        colorIndex=colorIndex+4;
     }
 
     public boolean isEven(int num) { return num % 2 == 0; }
 
     public boolean isOdd(int num) { return num % 2 == 1; }
+
+    /**
+     * Temporär. Tänkte prova rita allt med en index buffer istället.
+     * http://stackoverflow.com/questions/5915753/generate-a-plane-with-triangle-strips
+     * @param rows
+     * @param columns
+     * @param indices
+     * @return
+     */
+    public short[] createIndices(int rows, int columns, short[] indices)
+    {
+        indices = new short[rows * 2];
+
+        // Set up indices
+        short i = 0;
+        for (short r = 0; r < rows - 1; ++r) {
+            indices[i++] =(short) (r * columns);
+            for (short c = 0; c < columns; ++c) {
+                indices[i++] =(short) (r * columns + c);
+                indices[i++] =(short) ((r + 1) * columns + c);
+            }
+            indices[i++] = (short)((r + 1) * columns + (columns - 1));
+        }
+        return indices;
+    }
+
 }
