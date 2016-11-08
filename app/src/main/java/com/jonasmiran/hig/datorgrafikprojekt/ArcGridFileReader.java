@@ -27,13 +27,16 @@ public class ArcGridFileReader {
 
     public ArcGridFileReader(Context ctx, int resId)
     {
-        metaData = new HashMap();
-        rasterValues = readFile(ctx, resId);
+        this(ctx.getResources().openRawResource(resId));
     }
 
-    private float[][] readFile(Context ctx, int resId)
+    public ArcGridFileReader (InputStream inputStream) {
+        metaData = new HashMap();
+        rasterValues = readFile(inputStream);
+    }
+
+    private float[][] readFile(InputStream inputStream)
     {
-        InputStream inputStream = ctx.getResources().openRawResource(resId);
 
         String fileContents;
         int lineNumber = 0;
