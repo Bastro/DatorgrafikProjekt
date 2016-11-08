@@ -3,6 +3,9 @@ package com.jonasmiran.hig.datorgrafikprojekt;
 import android.content.Context;
 
 import java.io.BufferedReader;
+import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.FileReader;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
@@ -30,18 +33,41 @@ public class ArcGridFileReader {
         this(ctx.getResources().openRawResource(resId));
     }
 
-    public ArcGridFileReader (InputStream inputStream) {
+    public ArcGridFileReader (InputStream inputStream)
+    {
         metaData = new HashMap();
-        rasterValues = readFile(inputStream);
+        rasterValues = readFile(createBufferedReader(inputStream));
     }
 
-    private float[][] readFile(InputStream inputStream)
+    public ArcGridFileReader (File file)
+    {
+        metaData = new HashMap();
+        rasterValues = readFile(createBufferedReader(file));
+    }
+
+    private BufferedReader createBufferedReader(File file)
+    {
+        try {
+            FileReader fr = new FileReader(file);
+            BufferedReader br = new BufferedReader(fr);
+            return br;
+        } catch (FileNotFoundException e){
+
+        }
+        return null;
+    }
+
+    private BufferedReader createBufferedReader(InputStream inputStream)
+    {
+        BufferedReader br = new BufferedReader(new InputStreamReader(inputStream));
+        return br;
+    }
+
+    private float[][] readFile(BufferedReader br)
     {
 
         String fileContents;
         int lineNumber = 0;
-
-        BufferedReader br = new BufferedReader(new InputStreamReader(inputStream));
 
         try
         {
