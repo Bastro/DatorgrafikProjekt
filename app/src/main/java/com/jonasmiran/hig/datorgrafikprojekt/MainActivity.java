@@ -107,8 +107,10 @@ class CGRenderer implements GLSurfaceView.Renderer {
 
     // mMVPMatrix is an abbreviation for "Model View Projection Matrix"
     private final float[] mMVPMatrix = new float[16];
+
     private final float[] mProjectionMatrix = new float[16];
     private final float[] mViewMatrix = new float[16];
+
     private float[] mRotationMatrix = new float[16];
     private float[] CTM = new float[16];
 
@@ -139,10 +141,13 @@ class CGRenderer implements GLSurfaceView.Renderer {
 
         Matrix.setRotateM (mRotationMatrix, 0, yAngle, 1.0f, 0, 0);
         Matrix.multiplyMM (CTM, 0, mMVPMatrix, 0, mRotationMatrix, 0);
+
         Matrix.setRotateM (mRotationMatrix, 0, xAngle, 0, 1.0f, 0);
         Matrix.multiplyMM (CTM, 0, CTM, 0, mRotationMatrix, 0);
 
         Matrix.setLookAtM(mMVPMatrix, 0, 4000f, 1000f, -5300f,7900,70,5300,0,1,0);
+
+        Matrix.translateM(CTM, 0, -0.5f, -0.5f, 0.5f);
 
         // Draw shape
         mTriangle.draw (CTM);
@@ -158,19 +163,6 @@ class CGRenderer implements GLSurfaceView.Renderer {
         // in the onDrawFrame() method
         Matrix.frustumM(mProjectionMatrix, 0, -ratio, ratio, -1, 1, 0.5f, 300000.0f);
 
-    }
-
-    public static int loadShader(int type, String shaderCode){
-
-        // create a vertex shader type (GLES20.GL_VERTEX_SHADER)
-        // or a fragment shader type (GLES20.GL_FRAGMENT_SHADER)
-        int shader = GLES20.glCreateShader(type);
-
-        // add the source code to the shader and compile it
-        GLES20.glShaderSource(shader, shaderCode);
-        GLES20.glCompileShader(shader);
-
-        return shader;
     }
 
     public float getXAngle() {
