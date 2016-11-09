@@ -12,6 +12,9 @@ import android.view.ScaleGestureDetector;
 import javax.microedition.khronos.egl.EGLConfig;
 import javax.microedition.khronos.opengles.GL10;
 
+import static android.opengl.GLES20.GL_DEPTH_TEST;
+import static android.opengl.GLES20.glEnable;
+
 public class MainActivity extends AppCompatActivity {
 
     private GLSurfaceView mGLView;
@@ -35,7 +38,6 @@ class MyGLSurfaceView extends GLSurfaceView {
     public static Context context;
 
     private ScaleGestureDetector mScaleDetector;
-    private float mScaleFactor = 1.f;
 
     private final float TOUCH_SCALE_FACTOR = 0.13f; //180.0f / 320;
     private float mPreviousX;
@@ -92,10 +94,11 @@ class MyGLSurfaceView extends GLSurfaceView {
             extends ScaleGestureDetector.SimpleOnScaleGestureListener {
         @Override
         public boolean onScale(ScaleGestureDetector detector) {
-            mScaleFactor *= detector.getScaleFactor();
+            float scaleFactorNow = mRenderer.getScaleFactor();
+            mRenderer.setScaleFactor(scaleFactorNow  *= detector.getScaleFactor());
 
             // Don't let the object get too small or too large.
-            mScaleFactor = Math.max(0.1f, Math.min(mScaleFactor, 5.0f));
+            mRenderer.setScaleFactor(Math.max(0.1f, Math.min(mRenderer.getScaleFactor(), 5.0f)));
 
             invalidate();
             return true;
@@ -110,14 +113,16 @@ class CGRenderer implements GLSurfaceView.Renderer {
 
     private final float[] mProjectionMatrix = new float[16];
     private final float[] mViewMatrix = new float[16];
-
     private float[] mRotationMatrix = new float[16];
+
     private float[] CTM = new float[16];
 
     private Triangle mTriangle;
 
     public volatile float xAngle;
     public volatile float yAngle;
+
+    private float mScaleFactor = 1.f;
 
     @Override
     public void onSurfaceCreated(GL10 unused, EGLConfig config) {
@@ -129,11 +134,12 @@ class CGRenderer implements GLSurfaceView.Renderer {
 
     @Override
     public void onDrawFrame(GL10 unused) {
-
         // Redraw background color
         GLES20.glClear(GLES20.GL_COLOR_BUFFER_BIT|GLES20.GL_DEPTH_BUFFER_BIT);
 
-        Matrix.setIdentityM(mViewMatrix, 0);
+        glEnable(GL_DEPTH_TEST);
+
+        /*Matrix.setIdentityM(mViewMatrix, 0);
         Matrix.translateM(mViewMatrix, 0, 0, 0, -10000f);
 
         // Calculate the projection and view transformation
@@ -148,6 +154,13 @@ class CGRenderer implements GLSurfaceView.Renderer {
         Matrix.setLookAtM(mMVPMatrix, 0, 4000f, 1000f, -5300f,7900,70,5300,0,1,0);
 
         Matrix.translateM(CTM, 0, -0.5f, -0.5f, 0.5f);
+
+        Matrix.setIdentityM(mViewMatrix, 0);
+        Matrix.translateM(mViewMatrix, 0, 0, 0.5f, -2.0f);*/
+
+        float[] scalingRotationMatrix = new float[16];
+        Matrix.setRotateM(scalingRotationMatrix, 0, xAngle, 0, 0, 1);
+        Matrix.scaleM(scalingRotationMatrix, 0, mScaleFactor, mScaleFactor, mScaleFactor);
 
         // Draw shape
         mTriangle.draw (CTM);
@@ -176,6 +189,16 @@ class CGRenderer implements GLSurfaceView.Renderer {
         GLES20.glCompileShader(shader);
 
         return shader;
+    }
+
+    public float getScaleFactor()
+    {
+        return mScaleFactor;
+    }
+
+    public void setScaleFactor(float scaleFactor)
+    {
+        mScaleFactor = scaleFactor;
     }
 
     public float getXAngle() {
