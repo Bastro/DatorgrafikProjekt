@@ -4,9 +4,10 @@ import android.content.Context;
 import android.opengl.GLES20;
 import android.opengl.GLSurfaceView;
 import android.opengl.Matrix;
-import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
+import android.support.v7.app.AppCompatActivity;
 import android.view.MotionEvent;
+import android.view.ScaleGestureDetector;
 
 import javax.microedition.khronos.egl.EGLConfig;
 import javax.microedition.khronos.opengles.GL10;
@@ -33,6 +34,9 @@ class MyGLSurfaceView extends GLSurfaceView {
 
     public static Context context;
 
+    private ScaleGestureDetector mScaleDetector;
+    private float mScaleFactor = 1.f;
+
     private final float TOUCH_SCALE_FACTOR = 0.13f; //180.0f / 320;
     private float mPreviousX;
     private float mPreviousY;
@@ -51,6 +55,8 @@ class MyGLSurfaceView extends GLSurfaceView {
         setRenderer(mRenderer);
 
         setRenderMode(GLSurfaceView.RENDERMODE_WHEN_DIRTY);
+
+        mScaleDetector = new ScaleGestureDetector(context, new ScaleListener());
     }
 
     @Override
@@ -75,7 +81,25 @@ class MyGLSurfaceView extends GLSurfaceView {
 
         mPreviousX = x;
         mPreviousY = y;
+
+        mScaleDetector.onTouchEvent(e);
+
         return true;
+    }
+
+    // https://developer.android.com/training/gestures/scale.html
+    private class ScaleListener
+            extends ScaleGestureDetector.SimpleOnScaleGestureListener {
+        @Override
+        public boolean onScale(ScaleGestureDetector detector) {
+            mScaleFactor *= detector.getScaleFactor();
+
+            // Don't let the object get too small or too large.
+            mScaleFactor = Math.max(0.1f, Math.min(mScaleFactor, 5.0f));
+
+            invalidate();
+            return true;
+        }
     }
 }
 
