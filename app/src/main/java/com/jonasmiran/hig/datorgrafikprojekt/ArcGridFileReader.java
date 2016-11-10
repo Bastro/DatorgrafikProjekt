@@ -113,7 +113,8 @@ public class ArcGridFileReader {
             return null;
         }
     }
-
+    
+    private float max;
     private float[][] getData(String textFile, float rowSize, float colSize)
     {
         int partOfTextFile = 1;
@@ -126,9 +127,8 @@ public class ArcGridFileReader {
             for (int col = 0; col < colSize; col++)
             {
                 rasterValues[row][col] = Float.parseFloat(singleValue[partOfTextFile++]);
-                System.out.print(rasterValues[row][col] + "   "); //TODO: Debug. Should be removed.
+                max = Math.max(max, rasterValues[row][col]);
             }
-            System.out.println(); //TODO: Debug. Should be removed.
         }
 
         return rasterValues;
@@ -197,4 +197,8 @@ public class ArcGridFileReader {
         return metaData.get(NODATA_VALUE);
     }
 
+    public float getMax()
+    {
+        return max;
+    }
 }

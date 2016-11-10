@@ -15,24 +15,16 @@ public class Terrain {
     static final int COLOR_SIZE = 4;
 
     static final int VERTEX_ATTRIB_SIZE = VERTEX_POS_SIZE;
-    static final int COLOR_ATTRIB_SIZE = COLOR_SIZE;
 
     private int VERTEX_COUNT;
 
     private FloatBuffer vertexDataBuffer;
-    private FloatBuffer colorDataBuffer;
     private ShortBuffer indexBuffer;
 
     private float triangleData[] = {   // in counterclockwise order:
             0.0f,  0.622008459f, 0.0f, 1.0f, // top
             -0.5f, -0.311004243f, 0.0f, 1.0f, // bottom left
             0.5f, -0.311004243f, 0.0f, 1.0f, // bottom right
-    };
-
-    private float colorData[] = {   // in counterclockwise order:
-            1.0f, 0.0f, 0.0f, 1.0f, // Red
-            0.0f, 1.0f, 0.0f, 1.0f, // Green
-            0.0f, 0.0f, 1.0f, 1.0f// Blue
     };
 
     private short indices[];
@@ -46,16 +38,15 @@ public class Terrain {
     private int mMVPMatrixHandle;
 
     private int positionHandle;
-    private int colorHandle;
+    private int yMaxHandle;
 
     private ArcGridFileReader arcGridFileReader = new ArcGridFileReader(MyGLSurfaceView.context, R.raw.dem);
     private float[][] heightData = arcGridFileReader.getRasterData();
+    private float yMax = arcGridFileReader.getMax();
 
     public Terrain() {
-        colorData = new float[rowSize * colSize * 4];
         triangleData = getVertices(heightData);
         VERTEX_COUNT = triangleData.length / VERTEX_ATTRIB_SIZE;
-
         indices = getIndices(rowSize, colSize, indices);
 
         ByteBuffer bbv = ByteBuffer.allocateDirect(
@@ -66,15 +57,7 @@ public class Terrain {
         vertexDataBuffer.put(triangleData);
         vertexDataBuffer.position(0);
 
-        ByteBuffer bbc = ByteBuffer.allocateDirect(
-                colorData.length * 4);
-        bbc.order(ByteOrder.nativeOrder());
-
-        colorDataBuffer = bbc.asFloatBuffer();
-        colorDataBuffer.put(colorData);
-        colorDataBuffer.position(0);
-
-        indexBuffer = ByteBuffer.allocateDirect(indices.length * 2) // Two rows, each element 4 bytes
+        indexBuffer = ByteBuffer.allocateDirect(indices.length * 2)
                 .order(ByteOrder.nativeOrder())
                 .asShortBuffer()
                 .put(indices);
@@ -100,6 +83,9 @@ public class Terrain {
 
         mMVPMatrixHandle = GLES20.glGetUniformLocation(mProgram, "uMVPMatrix");
 
+        yMaxHandle = GLES20.glGetUniformLocation(mProgram, "yMax");
+        GLES20.glUniform1f(yMaxHandle, yMax);
+
         positionHandle = GLES20.glGetAttribLocation(mProgram, "vPosition");
         GLES20.glEnableVertexAttribArray(positionHandle);
 
@@ -107,18 +93,11 @@ public class Terrain {
                 GLES20.GL_FLOAT, false,
                 VERTEX_ATTRIB_SIZE * 4, vertexDataBuffer);
 
-        colorHandle = GLES20.glGetAttribLocation(mProgram, "vColor");
-        GLES20.glEnableVertexAttribArray(colorHandle);
-        GLES20.glVertexAttribPointer(colorHandle, COLOR_SIZE,
-                GLES20.GL_FLOAT, false,
-                COLOR_ATTRIB_SIZE * 4, colorDataBuffer);
-
         GLES20.glUniformMatrix4fv(mMVPMatrixHandle, 1, false, mvpMatrix, 0);
 
         GLES20.glDrawElements(GLES20.GL_TRIANGLE_STRIP, indices.length-2986, GLES20.GL_UNSIGNED_SHORT, indexBuffer);
 
         GLES20.glDisableVertexAttribArray(positionHandle);
-        GLES20.glDisableVertexAttribArray(colorHandle);
     }
 
     private int rowSize = arcGridFileReader.getNRows();
@@ -155,8 +134,6 @@ public class Terrain {
                     wIndex += 4;
 
                     x += cellSize;
-
-                    setColor(heightData[i][j]);
                 }
 
             x = cellSize;
@@ -164,42 +141,6 @@ public class Terrain {
         }
 
         return vertices;
-    }
-
-    private int colorIndex = 0;
-
-    /**
-     * Lånat från Dennis och Daniel. Bara för att testa. Behövs för att ritfunktionen inte kraschar.
-     * @param hight
-     */
-    private void setColor(float hight){
-
-        if(hight>60){
-            colorData[colorIndex]=0.5f;
-            colorData[colorIndex+1]=0.3f;
-            colorData[colorIndex+2]=0.0f;
-            colorData[colorIndex+3]=1f;
-        }
-        else if(hight<45&&hight>20){
-            colorData[colorIndex]=0.3f;
-            colorData[colorIndex+1]=0.7f;
-            colorData[colorIndex+2]=0.1f;
-            colorData[colorIndex+3]=1f;
-        }
-        else if(hight>44&&hight<61) {
-            colorData[colorIndex]=1.0f;
-            colorData[colorIndex+1]=1.0f;
-            colorData[colorIndex+2]=1.0f;
-            colorData[colorIndex+3]=1f;
-
-        }
-        else{
-           colorData[colorIndex]=0f;
-           colorData[colorIndex+1]=0.1f;
-           colorData[colorIndex+2]=0.8f;
-           colorData[colorIndex+3]=1f;
-        }
-        colorIndex=colorIndex+4;
     }
 
     public boolean isEven(int num) { return num % 2 == 0; }

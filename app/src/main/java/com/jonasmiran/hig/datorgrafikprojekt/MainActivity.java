@@ -117,7 +117,7 @@ class CGRenderer implements GLSurfaceView.Renderer {
 
     private float[] CTM = new float[16];
 
-    private Terrain mTriangle;
+    private Terrain mTerrain;
 
     public volatile float xAngle;
     public volatile float yAngle;
@@ -129,7 +129,7 @@ class CGRenderer implements GLSurfaceView.Renderer {
         // Set the background frame color
         GLES20.glClearColor(0.8f, 0.8f, 0.8f, 1.0f);
         // initialize a triangle
-        mTriangle = new Terrain();
+        mTerrain = new Terrain();
     }
 
     @Override
@@ -138,29 +138,25 @@ class CGRenderer implements GLSurfaceView.Renderer {
         GLES20.glClear(GLES20.GL_COLOR_BUFFER_BIT|GLES20.GL_DEPTH_BUFFER_BIT);
         glEnable(GL_DEPTH_TEST);
 
+
         Matrix.setIdentityM(mViewMatrix, 0);
         Matrix.translateM(mViewMatrix, 0, 0, 0, -10000f);
 
         // Calculate the projection and view transformation
         Matrix.multiplyMM (mMVPMatrix, 0, mProjectionMatrix, 0, mViewMatrix, 0);
 
-        Matrix.setRotateM (mRotationMatrix, 0, yAngle, 1.0f, 0, 0);
+        Matrix.setRotateM (mRotationMatrix, 0, yAngle, 1.0f, 0, 0.0f);
         Matrix.multiplyMM (CTM, 0, mMVPMatrix, 0, mRotationMatrix, 0);
 
         Matrix.setRotateM (mRotationMatrix, 0, xAngle, 0, 1.0f, 0);
         Matrix.multiplyMM (CTM, 0, CTM, 0, mRotationMatrix, 0);
 
-        Matrix.setLookAtM(mMVPMatrix, 0, 4000f, 1000f, -5300f,7900,70,5300,0,1,0);
-
         Matrix.translateM(CTM, 0, -0.5f, -0.5f, 0.5f);
-
-        Matrix.setIdentityM(mViewMatrix, 0);
-        Matrix.translateM(mViewMatrix, 0, 0, 0.5f, -2.0f);
 
         Matrix.scaleM(CTM, 0, mScaleFactor, mScaleFactor, mScaleFactor);
 
         // Draw shape
-        mTriangle.draw (CTM);
+        mTerrain.draw (CTM);
     }
 
     @Override
