@@ -197,6 +197,10 @@ public class ArcGridFileReader {
         return metaData.get(NODATA_VALUE);
     }
 
+    /**
+     * Max height
+     * @return
+     */
     public float getMax()
     {
         return max;

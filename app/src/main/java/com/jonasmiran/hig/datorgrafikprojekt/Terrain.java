@@ -7,6 +7,10 @@ import java.nio.ByteOrder;
 import java.nio.FloatBuffer;
 import java.nio.ShortBuffer;
 
+/**
+ * Created by Miran, Jonas on 31/10/2016.
+ * draw a Terrain using OpenGL
+ */
 public class Terrain {
 
     static final int VERTEX_POS_SIZE = 4;
@@ -76,6 +80,10 @@ public class Terrain {
 
     }
 
+    /**
+     * Draw Terrain using a Matrix
+     * @param mvpMatrix
+     */
     public void draw(float[] mvpMatrix) {
         GLES20.glUseProgram(mProgram);
 
@@ -197,8 +205,6 @@ public class Terrain {
                 }
             }
         }
-
         return indices;
     }
-
 }

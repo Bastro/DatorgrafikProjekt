@@ -89,7 +89,6 @@ class MyGLSurfaceView extends GLSurfaceView {
         return true;
     }
 
-    // https://developer.android.com/training/gestures/scale.html
     private class ScaleListener
             extends ScaleGestureDetector.SimpleOnScaleGestureListener {
         @Override
@@ -156,7 +155,7 @@ class CGRenderer implements GLSurfaceView.Renderer {
         Matrix.scaleM(CTM, 0, mScaleFactor, mScaleFactor, mScaleFactor);
 
         // Draw shape
-        mTerrain.draw (CTM);
+        mTerrain.draw(CTM);
     }
 
     @Override
@@ -168,11 +167,9 @@ class CGRenderer implements GLSurfaceView.Renderer {
         // this projection matrix is applied to object coordinates
         // in the onDrawFrame() method
         Matrix.frustumM(mProjectionMatrix, 0, -ratio, ratio, -1, 1, 0.5f, 300000.0f);
-
     }
 
-    public static int loadShader(int type, String shaderCode)
-    {
+    public static int loadShader(int type, String shaderCode) {
         // create a vertex shader type (GLES20.GL_VERTEX_SHADER)
         // or a fragment shader type (GLES20.GL_FRAGMENT_SHADER)
         int shader = GLES20.glCreateShader(type);
