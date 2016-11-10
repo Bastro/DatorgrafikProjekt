@@ -19,15 +19,15 @@ void main()
         g = 1;
         b = 1;
     }
-    else if(y <= 45 && y >= 20)
+    else if(y >= 44 && y <= 55)
     {
-        r = 0;
+        r = heightColor * colorMultiplier;
         g = heightColor * colorMultiplier;
         b = 0;
     }
-    else if(y >= 44 && y <= 60)
+    else if(y >= 20 && y <= 45 )
     {
-        r = heightColor * colorMultiplier;
+        r = 0;
         g = heightColor * colorMultiplier;
         b = 0;
     }
