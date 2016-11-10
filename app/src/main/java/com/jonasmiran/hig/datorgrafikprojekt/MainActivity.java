@@ -139,7 +139,7 @@ class CGRenderer implements GLSurfaceView.Renderer {
 
         glEnable(GL_DEPTH_TEST);
 
-        /*Matrix.setIdentityM(mViewMatrix, 0);
+        Matrix.setIdentityM(mViewMatrix, 0);
         Matrix.translateM(mViewMatrix, 0, 0, 0, -10000f);
 
         // Calculate the projection and view transformation
@@ -156,7 +156,7 @@ class CGRenderer implements GLSurfaceView.Renderer {
         Matrix.translateM(CTM, 0, -0.5f, -0.5f, 0.5f);
 
         Matrix.setIdentityM(mViewMatrix, 0);
-        Matrix.translateM(mViewMatrix, 0, 0, 0.5f, -2.0f);*/
+        Matrix.translateM(mViewMatrix, 0, 0, 0.5f, -2.0f);
 
         float[] scalingRotationMatrix = new float[16];
         Matrix.setRotateM(scalingRotationMatrix, 0, xAngle, 0, 0, 1);

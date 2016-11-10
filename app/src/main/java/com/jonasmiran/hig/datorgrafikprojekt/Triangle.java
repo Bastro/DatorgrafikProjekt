@@ -325,22 +325,25 @@ public class Triangle {
             }
         }*/
 
-        /* En annan metod
+
+        /*
         int index = 0;
         for (int j = 0; j < rows; j++){
-        for (int i = 0; i < colSize; i++) {
-            if(index == j * i)
-                break;
-            indices[index * 2] = (short)index;
-            indices[index * 2 + 1] = (short) (index + colSize);
-            index++;
-        }
+            for (int i = 0; i < colSize; i++) {
+                if(index == j * i)
+                    break;
+                indices[index * 2] = (short)index;
+                indices[index * 2 + 1] = (short) (index + colSize);
+                index++;
+            }
         }*/
 
         //Det som används just nu
         int index = 0;
         for ( int z = 0; z < rows - 1; z++ )
         {
+            if(index == rows)
+                break;
             // Even rows move left to right, odd rows move right to left.
             if ( z % 2 == 0 )
             {
