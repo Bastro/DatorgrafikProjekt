@@ -13,8 +13,8 @@ import java.util.HashMap;
 import java.util.Map;
 
 /**
- * Created by Miran on 31/10/2016.
- * Kod för att hämta data och metadata
+ * Created by Miran, Jonas on 31/10/2016.
+ * Reading a ArcGrid raster text file and store data to access
  */
 public class ArcGridFileReader {
 
@@ -29,17 +29,30 @@ public class ArcGridFileReader {
 
     private float[][] rasterValues;
 
+    /**
+     * Read from Android resources
+     * @param ctx
+     * @param resId
+     */
     public ArcGridFileReader(Context ctx, int resId)
     {
         this(ctx.getResources().openRawResource(resId));
     }
 
+    /**
+     * Read from InputStream
+     * @param inputStream
+     */
     public ArcGridFileReader (InputStream inputStream)
     {
         metaData = new HashMap();
         rasterValues = readFile(createBufferedReader(inputStream));
     }
 
+    /**
+     * Read from file
+     * @param file
+     */
     public ArcGridFileReader (File file)
     {
         metaData = new HashMap();
@@ -121,36 +134,64 @@ public class ArcGridFileReader {
         return rasterValues;
     }
 
+    /**
+     * Height data
+     * @return
+     */
     public float[][] getRasterData()
     {
         return rasterValues;
     }
 
+    /**
+     * X value for center of height data
+     * @return
+     */
     public float getXLLCenter()
     {
         return metaData.get(XLLCENTER);
     }
 
+    /**
+     * Y value for center of height data
+     * @return
+     */
     public float getYLLCenter()
     {
         return metaData.get(YLLCENTER);
     }
 
+    /**
+     *
+     * @return
+     */
     public float getCellSize()
     {
         return metaData.get(CELLSIZE);
     }
 
+    /**
+     * Number of rows
+     * @return
+     */
     public int getNRows()
     {
         return metaData.get(NROWS).intValue();
     }
 
+    /**
+     * Number of colums
+     * @return
+     */
     public int getNColls()
     {
         return metaData.get(NCOLS).intValue();
     }
 
+    /**
+     * Nodata_value value
+     * @return
+     */
     public float getNoDataValue()
     {
         return metaData.get(NODATA_VALUE);
