@@ -1,13 +1,11 @@
 package com.jonasmiran.hig.datorgrafikprojekt;
 
 import android.opengl.GLES20;
-import android.util.Log;
 
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
 import java.nio.FloatBuffer;
 import java.nio.ShortBuffer;
-import java.util.Arrays;
 
 public class Terrain {
 
@@ -104,7 +102,12 @@ public class Terrain {
     private int colSize = arcGridFileReader.getNColls();
     private float cellSize = arcGridFileReader.getCellSize();
 
-    private float[] getVertices (float[][] heightData)
+    private float[] getVertices(float[][] heightData)
+    {
+        return createVertices(heightData);
+    }
+
+    private float[] createVertices(float[][] heightData)
     {
         float[] vertices = new float[rowSize * colSize * VERTEX_POS_SIZE];
 
