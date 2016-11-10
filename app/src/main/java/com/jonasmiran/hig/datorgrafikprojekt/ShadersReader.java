@@ -11,28 +11,44 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 
-
 /**
- * Created by asd on 2016-11-09.
+ * Created by Miran, Jonas on 2016-11-09.
+ * Read vertex_shader & fragment_shader
  */
-
 public class ShadersReader
 {
     String vertexCode;
     String fragmentCode;
 
+    /**
+     * Both files in String object
+     * @param vertexCode
+     * @param fragmentCode
+     */
     public ShadersReader(String vertexCode, String fragmentCode)
     {
         this.vertexCode = vertexCode;
         this.fragmentCode  = fragmentCode;
     }
 
+    /**
+     * Both files in File format
+     * @param vertexShaderFile
+     * @param fragmentShaderFile
+     */
     public ShadersReader(File vertexShaderFile, File fragmentShaderFile)
     {
         vertexCode = ReadFile(createBufferedReader(vertexShaderFile));
         fragmentCode = ReadFile(createBufferedReader(fragmentShaderFile));
     }
 
+    /**
+     * Both files from Android Studio resources
+     * @param ctxVertex
+     * @param resIdVertex
+     * @param ctxFragment
+     * @param resIdFragment
+     */
     public ShadersReader(Context ctxVertex, int resIdVertex, Context ctxFragment, int resIdFragment)
     {
         vertexCode = ReadFile(createBufferedReader(ctxVertex, resIdVertex));
@@ -76,6 +92,10 @@ public class ShadersReader
         return text.toString();
     }
 
+    /**
+     * vertex_shader load
+     * @return
+     */
     public int loadVertexShader()
     {
         int shader = GLES20.glCreateShader(GLES20.GL_VERTEX_SHADER);
@@ -85,6 +105,10 @@ public class ShadersReader
         return shader;
     }
 
+    /**
+     * fragment_shader load
+     * @return
+     */
     public int loadFragmentShader()
     {
         int shader = GLES20.glCreateShader(GLES20.GL_FRAGMENT_SHADER);
@@ -93,19 +117,4 @@ public class ShadersReader
 
         return shader;
     }
-
-    // Förmodlig ta bort nu?
-    /*
-    public static int loadShader(int type, String shaderCode)
-    {
-        // create a vertex shader type (GLES20.GL_VERTEX_SHADER)
-        // or a fragment shader type (GLES20.GL_FRAGMENT_SHADER)
-        int shader = GLES20.glCreateShader(type);
-
-        // add the source code to the shader and compile it
-        GLES20.glShaderSource(shader, shaderCode);
-        GLES20.glCompileShader(shader);
-
-        return shader;
-    }*/
 }
