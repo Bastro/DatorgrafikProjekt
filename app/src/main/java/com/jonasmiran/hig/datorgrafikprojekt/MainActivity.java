@@ -117,7 +117,7 @@ class CGRenderer implements GLSurfaceView.Renderer {
 
     private float[] CTM = new float[16];
 
-    private Triangle mTriangle;
+    private Terrain mTriangle;
 
     public volatile float xAngle;
     public volatile float yAngle;
@@ -129,14 +129,13 @@ class CGRenderer implements GLSurfaceView.Renderer {
         // Set the background frame color
         GLES20.glClearColor(0.8f, 0.8f, 0.8f, 1.0f);
         // initialize a triangle
-        mTriangle = new Triangle();
+        mTriangle = new Terrain();
     }
 
     @Override
     public void onDrawFrame(GL10 unused) {
         // Redraw background color
         GLES20.glClear(GLES20.GL_COLOR_BUFFER_BIT|GLES20.GL_DEPTH_BUFFER_BIT);
-
         glEnable(GL_DEPTH_TEST);
 
         Matrix.setIdentityM(mViewMatrix, 0);
@@ -158,9 +157,11 @@ class CGRenderer implements GLSurfaceView.Renderer {
         Matrix.setIdentityM(mViewMatrix, 0);
         Matrix.translateM(mViewMatrix, 0, 0, 0.5f, -2.0f);
 
-        float[] scalingRotationMatrix = new float[16];
-        Matrix.setRotateM(scalingRotationMatrix, 0, xAngle, 0, 0, 1);
-        Matrix.scaleM(scalingRotationMatrix, 0, mScaleFactor, mScaleFactor, mScaleFactor);
+        //float[] scalingRotationMatrix = new float[16];
+        // Ändrat här
+        Matrix.setRotateM(CTM, 0, xAngle, 0, 0, 1);
+        Matrix.setRotateM(CTM, 0, yAngle, 0, 0, 1);
+        Matrix.scaleM(CTM, 0, mScaleFactor, mScaleFactor, mScaleFactor);
 
         // Draw shape
         mTriangle.draw (CTM);
