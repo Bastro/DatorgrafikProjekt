@@ -157,10 +157,6 @@ class CGRenderer implements GLSurfaceView.Renderer {
         Matrix.setIdentityM(mViewMatrix, 0);
         Matrix.translateM(mViewMatrix, 0, 0, 0.5f, -2.0f);
 
-        //float[] scalingRotationMatrix = new float[16];
-        // Ändrat här
-        Matrix.setRotateM(CTM, 0, xAngle, 0, 0, 1);
-        Matrix.setRotateM(CTM, 0, yAngle, 0, 0, 1);
         Matrix.scaleM(CTM, 0, mScaleFactor, mScaleFactor, mScaleFactor);
 
         // Draw shape
