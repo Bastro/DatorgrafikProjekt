@@ -1,7 +1,6 @@
 #version 120
 
 precision mediump float;
-varying vec4 c;
 varying float y;
 varying float max;
 
@@ -37,7 +36,8 @@ void main()
         g = 0;
         b = heightColor * colorMultiplier;
     }
-        color = vec4(r, g, b, a);
+
+    color = vec4(r, g, b, a);
 
     gl_FragColor = color;
 }

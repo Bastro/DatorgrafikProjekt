@@ -5,6 +5,7 @@ import android.opengl.GLES20;
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
 import java.nio.FloatBuffer;
+import java.nio.IntBuffer;
 import java.nio.ShortBuffer;
 
 /**
@@ -21,7 +22,7 @@ public class Terrain {
     private int VERTEX_COUNT;
 
     private FloatBuffer vertexDataBuffer;
-    private ShortBuffer indexBuffer;
+    private IntBuffer indexBuffer;
 
     private float triangleData[] = {   // in counterclockwise order:
             0.0f,  0.622008459f, 0.0f, 1.0f, // top
@@ -29,7 +30,7 @@ public class Terrain {
             0.5f, -0.311004243f, 0.0f, 1.0f, // bottom right
     };
 
-    private short indices[];
+    private int indices[];
 
     private final int mProgram;
 
@@ -59,9 +60,9 @@ public class Terrain {
         vertexDataBuffer.put(triangleData);
         vertexDataBuffer.position(0);
 
-        indexBuffer = ByteBuffer.allocateDirect(indices.length * 2)
+        indexBuffer = ByteBuffer.allocateDirect(indices.length * 4)
                 .order(ByteOrder.nativeOrder())
-                .asShortBuffer()
+                .asIntBuffer()
                 .put(indices);
         indexBuffer.position(0);
 
@@ -101,7 +102,7 @@ public class Terrain {
 
         GLES20.glUniformMatrix4fv(mMVPMatrixHandle, 1, false, mvpMatrix, 0);
 
-        GLES20.glDrawElements(GLES20.GL_TRIANGLE_STRIP, indices.length-2986, GLES20.GL_UNSIGNED_SHORT, indexBuffer);
+        GLES20.glDrawElements(GLES20.GL_TRIANGLE_STRIP, indices.length, GLES20.GL_UNSIGNED_INT, indexBuffer);
 
         GLES20.glDisableVertexAttribArray(positionHandle);
     }
@@ -156,7 +157,7 @@ public class Terrain {
 
     public boolean isEven(int num) { return num % 2 == 0; }
 
-    private short[] getIndices(int rows, int columns, short[] indices)
+    private int[] getIndices(int rows, int columns, int[] indices)
     {
         return createIndices(rows, columns, indices);
     }
@@ -166,9 +167,9 @@ public class Terrain {
      *
      * based on http://www.chadvernon.com/blog/resources/directx9/terrain-generation-with-a-heightmap/
      */
-    private short[] createIndices(int rows, int columns, short[] indices)
+    private int[] createIndices(int rows, int columns, int[] indices)
     {
-        indices = new short[((columns * 2) * (rows - 1) + (rows - 2))];
+        indices = new int[((columns * 2) * (rows - 1) + (rows - 2))];
 
         int index = 0;
         for ( int z = 0; z < rows - 1; z++ )
@@ -180,13 +181,13 @@ public class Terrain {
                 int x;
                 for ( x = 0; x < columns; x++ )
                 {
-                    indices[index++] = (short)(x + (z * columns));
-                    indices[index++] = (short)(x + (z * columns) + columns);
+                    indices[index++] = (x + (z * columns));
+                    indices[index++] = (x + (z * columns) + columns);
                 }
                 // Insert degenerate vertex if this isn't the last row
                 if ( z != rows - 2)
                 {
-                    indices[index++] = (short)(--x + (z * columns));
+                    indices[index++] = (--x + (z * columns));
                 }
             }
             else
@@ -195,13 +196,13 @@ public class Terrain {
                 int x;
                 for ( x = columns - 1; x >= 0; x-- )
                 {
-                    indices[index++] = (short)(x + (z * columns));
-                    indices[index++] = (short) (x + (z * columns) + columns);
+                    indices[index++] = (x + (z * columns));
+                    indices[index++] = (x + (z * columns) + columns);
                 }
                 // Insert degenerate vertex if this isn't the last row
                 if ( z != rows - 2)
                 {
-                    indices[index++] = (short)(++x + (z * columns));
+                    indices[index++] = (++x + (z * columns));
                 }
             }
         }

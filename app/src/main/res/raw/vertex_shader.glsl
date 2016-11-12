@@ -4,7 +4,6 @@ attribute vec4 vPosition;
 attribute vec4 vColor;
 attribute float yMax;
 uniform mat4 uMVPMatrix;
-varying vec4 c;
 varying float y;
 varying float max;
 
